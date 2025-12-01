@@ -18,5 +18,3 @@ You can also apply beautiful presets and take filtered screenshots instantly.
 
 ---
 
-## 📂 Folder Structure
-
