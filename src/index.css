@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Roundex";
+  src: url("assets//Roundex.otf");
+}
+
+body {
+  background-color: gray;
+}
+
+.title-text {
+  font-family: "Roundex";
+}

@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "reColor",
+  "version": "1.0",
+  "description": "",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "96": "icons/logo-96.png",
+    "100": "icons/logo-100.png"
+  },
+  "permissions": ["activeTab", "scripting", "tabs"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
