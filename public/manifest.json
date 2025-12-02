@@ -10,7 +10,7 @@
     "96": "icons/logo-96.png",
     "100": "icons/logo-100.png"
   },
-  "permissions": ["activeTab", "scripting", "tabs"],
+  "permissions": ["activeTab", "scripting", "tabs", "storage"],
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],

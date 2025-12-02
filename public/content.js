@@ -1,30 +1,42 @@
-console.log("Content script loaded");
+const DEFAULT_FILTER = [
+  { filter: "brightness", range: 100, min: 50, max: 150 },
+  { filter: "contrast", range: 100, min: 50, max: 150 },
+  { filter: "saturate", range: 100, min: 50, max: 150 },
+  { filter: "hue-rotate", range: 0, min: 0, max: 100 },
+];
+
+function applyFilter(video, filters) {
+  const filterString = filters
+    .map((filter) => {
+      if (filter.filter === "hue-rotate")
+        return `${filter.filter}(${filter.range}deg)`;
+      return `${filter.filter}(${filter.range}%)`;
+    })
+    .join(" ");
+
+  video.style.filter = filterString;
+}
+
+window.addEventListener("load", () => {
+  const video = document.querySelector("video");
+  if (video) {
+    chrome.storage.local.set({ filters: DEFAULT_FILTER });
+    applyFilter(video, DEFAULT_FILTER);
+  }
+});
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-  console.log("Message received in content script:", req);
-
   const video = document.querySelector("video");
   if (!video) {
     console.warn("No video element found.");
     return;
   }
-
   if (req.type === "SET_BRIGHTNESS") {
     video.style.filter = `brightness(${req.value}%)`;
     console.log(`Brightness applied: ${req.value}%`);
   }
-
   if (req.type === "SET_FILTERS") {
-    console.log("OG filters:", video.style.filter);
-    const filterString = req.newFilters
-      .map((f) => {
-        if (f.filter === "hue-rotate") return `${f.filter}(${f.range}deg)`;
-        return `${f.filter}(${f.range}%)`;
-      })
-      .join(" ");
-
-    video.style.filter = filterString;
-    console.log("Applied filters:", filterString);
+    applyFilter(video, req.newFilters);
   }
 
   if (req.type === "TAKE_SCREENSHOT") {
@@ -44,14 +56,12 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     const videoId =
       new URLSearchParams(window.location.search).get("v") || "video";
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filename = `yt_${videoId}_${timestamp}.png`;
+    const filename = `YT-Screenshot_${videoId}_${timestamp}.png`;
 
     // Download
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
     link.download = filename;
     link.click();
-
-    console.log("Screenshot saved as", filename);
   }
 });

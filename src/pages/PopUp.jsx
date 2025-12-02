@@ -20,6 +20,9 @@ const DEFAULT_FILTER = [
 const PopUp = () => {
   const [filters, setFilters] = useState(DEFAULT_FILTER);
   const [isDark, setDark] = useState(true);
+  const [slidingFilter, setSlidingFilter] = useState(null);
+
+  const presetImages = [PresetOne, PresetTwo, PresetThree, PresetFour];
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -29,6 +32,15 @@ const PopUp = () => {
     media.addEventListener("change", handler);
 
     return () => media.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    chrome.storage.local.get("filters", (result) => {
+      if (result.filters) {
+        setFilters(result.filters);
+        setQueryToActiveTab("SET_FILTERS", { newFilters: result.filters });
+      }
+    });
   }, []);
 
   const setQueryToActiveTab = (type, payload) => {
@@ -44,6 +56,7 @@ const PopUp = () => {
       filter.filter === name ? { ...filter, range: newValue } : filter
     );
     setFilters(newFilters);
+    chrome.storage.local.set({ filters: newFilters });
     setQueryToActiveTab("SET_FILTERS", { newFilters });
   };
 
@@ -53,11 +66,21 @@ const PopUp = () => {
 
   const handleReset = () => {
     setFilters(DEFAULT_FILTER);
+    chrome.storage.local.get("filter", (result) => {
+      if (result.filters) {
+        {
+          console.log("N", result.filters);
+        }
+      }
+    });
+    chrome.storage.local.set({ filters: DEFAULT_FILTER });
+
     setQueryToActiveTab("SET_FILTERS", { newFilters: DEFAULT_FILTER });
   };
 
   const handlePresetFilter = (filter) => {
     setFilters(filter);
+    chrome.storage.local.set({ filters: newFilters });
     setQueryToActiveTab("SET_FILTERS", { newFilters: filter });
   };
 
@@ -77,6 +100,35 @@ const PopUp = () => {
           isDark ? "border-gray-600" : "border-gray-300"
         }`}
       >
+        {/* <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 400 400"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <filter id="sharpenFilter">
+              <feConvolveMatrix
+                in="SourceGraphic"
+                order="3 3"
+                kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"
+                divisor="1"
+                bias="0"
+              />
+            </filter>
+          </defs>
+
+          <image
+            href={PresetThree} // or xlinkHref={PresetOne}
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            style={{ filter: "url(#sharpenFilter)" }}
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </svg> */}
+
         <img src={Icon} className="w-5.5 h-5.5 mt-0.5" />
         <h1 className="tracking-wide title-text ml-1.5 font-semibold text-[1.3rem]">
           reColor
@@ -115,18 +167,32 @@ const PopUp = () => {
           <ul className="flex flex-col gap-4">
             {filters.map((filter, index) => (
               <li key={index}>
-                <div className="text-xs tracking-wide font-semibold uppercase flex justify-between">
+                <div
+                  className={`text-xs tracking-wide font-semibold uppercase flex justify-between ${
+                    slidingFilter === filter.filter
+                      ? isDark
+                        ? "text-slate-50"
+                        : "text-slate-600"
+                      : isDark
+                      ? "text-slate-400 "
+                      : "text-slate-500"
+                  } `}
+                >
                   <span>{filter.filter}</span>
                   <p>{filter.range}</p>
                 </div>
-
                 <Slider
                   size="small"
                   value={filter.range}
                   min={filter.min}
                   max={filter.max}
-                  onChange={(e, v) => handleOnChange(filter.filter, v)}
-                  valueLabelDisplay="auto"
+                  onChange={(e, v) => {
+                    setSlidingFilter(filter.filter);
+                    handleOnChange(filter.filter, v);
+                  }}
+                  onChangeCommitted={() => {
+                    setSlidingFilter(null);
+                  }}
                 />
               </li>
             ))}
@@ -141,15 +207,7 @@ const PopUp = () => {
                 onClick={() => handlePresetFilter(preset.filters)}
               >
                 <img
-                  src={
-                    index === 0
-                      ? PresetOne
-                      : index === 1
-                      ? PresetTwo
-                      : index === 2
-                      ? PresetThree
-                      : PresetFour
-                  }
+                  src={presetImages[index]}
                   alt="Preset Icon"
                   className={`aspect-square object-cover w-full h-full rounded transition ${
                     isDark
