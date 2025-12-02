@@ -80,7 +80,7 @@ const PopUp = () => {
 
   const handlePresetFilter = (filter) => {
     setFilters(filter);
-    chrome.storage.local.set({ filters: newFilters });
+    chrome.storage.local.set({ filters: filter });
     setQueryToActiveTab("SET_FILTERS", { newFilters: filter });
   };
 
